@@ -1,0 +1,5 @@
+# Optional NVIDIA GPU access; the base stack also works on CPU.
+# docker-compose -f docker-compose.yaml -f docker-compose.gpu.yaml up -d --build
+services:
+  ollama:
+    gpus: all

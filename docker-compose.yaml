@@ -1,0 +1,99 @@
+# No .env is required. Compose reads it automatically if it exists.
+x-app-environment: &app-environment
+  OLLAMA_BASE_URL: http://ollama:11434
+  QDRANT_URL: http://qdrant:6333
+  DATA_DIR: /data/documents
+  CHAT_MODEL: ${CHAT_MODEL:-qwen3:4b-instruct}
+  EMBEDDING_MODEL: ${EMBEDDING_MODEL:-qwen3-embedding:0.6b}
+  EMBEDDING_DIMENSIONS: ${EMBEDDING_DIMENSIONS:-1024}
+  OLLAMA_TIMEOUT: ${OLLAMA_TIMEOUT:-300}
+  OLLAMA_NUM_CTX: ${OLLAMA_NUM_CTX:-8192}
+  OLLAMA_NUM_PREDICT: ${OLLAMA_NUM_PREDICT:-1200}
+  QDRANT_COLLECTION: ${QDRANT_COLLECTION:-documents_ollama_qwen3}
+  MAX_UPLOAD_MB: ${MAX_UPLOAD_MB:-20}
+  CHUNK_SIZE: ${CHUNK_SIZE:-1200}
+  CHUNK_OVERLAP: ${CHUNK_OVERLAP:-180}
+  TOP_K: ${TOP_K:-6}
+  SCORE_THRESHOLD: ${SCORE_THRESHOLD:-0.25}
+  APP_TOKEN: ${APP_TOKEN:-}
+
+services:
+  ollama:
+    image: ollama/ollama:latest
+    restart: unless-stopped
+    volumes:
+      - ollama_models:/root/.ollama
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 10s
+
+  ollama-init:
+    build:
+      context: .
+      target: ollama-init
+    restart: "no"
+    environment:
+      OLLAMA_HOST: http://ollama:11434
+      CHAT_MODEL: ${CHAT_MODEL:-qwen3:4b-instruct}
+      EMBEDDING_MODEL: ${EMBEDDING_MODEL:-qwen3-embedding:0.6b}
+    depends_on:
+      ollama:
+        condition: service_healthy
+
+  qdrant:
+    image: qdrant/qdrant:v1.15.5
+    restart: unless-stopped
+    volumes:
+      - qdrant_data:/qdrant/storage
+
+  app:
+    image: ragdocument-app:local
+    build:
+      context: .
+      target: runtime
+    restart: unless-stopped
+    init: true
+    environment: *app-environment
+    ports:
+      - "127.0.0.1:${APP_PORT:-8000}:8000"
+    volumes:
+      - documents:/data/documents
+    depends_on:
+      ollama-init:
+        condition: service_completed_successfully
+      qdrant:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/healthz', timeout=15)"]
+      interval: 30s
+      timeout: 20s
+      retries: 5
+      start_period: 30s
+
+  test:
+    profiles: [test]
+    build:
+      context: .
+      target: test
+    environment:
+      DATA_DIR: /tmp/test-documents
+
+  smoke:
+    profiles: [smoke]
+    image: ragdocument-app:local
+    build:
+      context: .
+      target: runtime
+    environment: *app-environment
+    command: ["python", "-m", "scripts.smoke_ollama"]
+    depends_on:
+      app:
+        condition: service_healthy
+
+volumes:
+  qdrant_data:
+  documents:
+  ollama_models:

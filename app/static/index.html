@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>RagDocument — ответы с источниками</title><link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <aside>
+    <a class="brand" href="/">▧ <span>RagDocument</span></a>
+    <p class="muted">Ваши документы. Точные ссылки.</p>
+    <label class="token-label" for="token">Токен приложения <span class="muted">· если задан</span></label>
+    <div class="token-row"><input id="token" type="password" placeholder="APP_TOKEN" autocomplete="off"><button id="connect" class="secondary" type="button">Войти</button></div>
+    <div class="library-head"><h2>Библиотека</h2><span id="count" class="badge">0</span></div>
+    <label class="upload" id="dropzone" tabindex="0" role="button">
+      <span class="upload-icon">＋</span><strong>Добавить документы</strong>
+      <span>или перетащите файлы сюда</span><small id="formats">PDF, DOCX, TXT, MD, XLSX, XLS · до 20 МБ</small>
+      <input id="files" type="file" accept=".pdf,.docx,.txt,.md,.xlsx,.xls" multiple hidden>
+    </label>
+    <p id="upload-status" role="status" aria-live="polite"></p>
+    <div class="selection"><label><input type="checkbox" id="select-all" checked> Все документы</label><button id="refresh" class="link" type="button">Обновить</button></div>
+    <div id="documents" class="documents"></div>
+    <footer><span class="dot"></span><span id="connection">Проверка настроек…</span><small>Поиск по смыслу · Qdrant</small></footer>
+  </aside>
+  <main>
+    <header><div><span class="eyebrow">ПОМОЩНИК ПО ДОКУМЕНТАМ</span><h1>Спросите вашу библиотеку</h1></div><button id="clear" class="secondary" type="button">Новый диалог</button></header>
+    <div id="notice" role="status" hidden></div>
+    <section id="chat" aria-live="polite">
+      <div id="welcome" class="welcome"><div class="welcome-icon">▧</div><h2>От вопроса — к источнику</h2><p>Загрузите документы и задайте вопрос.<br>В ответе появятся ссылки на конкретные места в тексте.</p><div class="steps"><span>01 <b>Загрузите файл</b></span><span>02 <b>Задайте вопрос</b></span><span>03 <b>Проверьте источник</b></span></div></div>
+    </section>
+    <form id="ask-form"><div class="composer"><textarea id="question" rows="2" maxlength="4000" placeholder="Что вы хотите узнать из документов?" aria-label="Ваш вопрос" required></textarea><button id="send" type="submit">Спросить <span>↑</span></button></div><p class="hint">Enter — отправить · Shift + Enter — новая строка. Каждый вопрос рассматривается отдельно.</p></form>
+  </main>
+  <script src="/app.js" defer></script>
+</body></html>
